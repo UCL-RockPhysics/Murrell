@@ -12,11 +12,12 @@ function M_file(P,col)
     sh = xf[XLSX.sheetnames(xf)[1]]
     info = sh[:]
     P[:I]=[info[col,4],info[col,5],info[col,6]] # Indice at HP
+    P[:P_exp] = info[col,2]
     P[:T] = info[col,7] # Temperature of experiment
     P[:εr] = info[col,8] # Strain rate of test
-    P[:K] = info[col,9]*1e-3 # Machine compliance [m kN^-1]
-    P[:L] = info[col,10] # Sample length
-    P[:d] = info[col,11]*1e-3 # Diameter of sample [m]
+    P[:K_mm_kN] = info[col,9] # Machine compliance [mm kN^-1]
+    P[:L_mm] = info[col,10] # Sample length
+    P[:d_mm] = info[col,11] # Diameter of sample [m]
     fil = info[col,1]
     if Sys.iswindows()
         P[:fid] = "C:\\Users\\cwaha\\Dropbox\\My PC (DESKTOP-8JF2H49)\\Documents\\UCL\\raw_lab data\\"*fil*".tdms"
@@ -42,11 +43,12 @@ function M_read(P)
     P[:t_s_c] = P[:t_s].-P[:t_s][P[:I][1]]
     P[:F_kN_c] = P[:F_kN] .-P[:F_kN][P[:I][1]]
     P[:U_mm_c] = ((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][P[:I][1]]+P[:U2_mm][P[:I][1]]))./2
-    P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*P[:K])
-    P[:ε] = P[:U_mm_fc]./P[:L]
-    P[:F_kN_j] = P[:F_kN_c] .-JR(P)*1e-3
-    P[:σ_MPa] = P[:F_kN_c]./(0.25π*P[:d]^2) .*1e-3
-    P[:σ_MPa_j] = P[:F_kN_j]./(0.25π*P[:d]^2) .*1e-3
+    P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*P[:K_mm_kN])
+    P[:ε] = P[:U_mm_fc]./P[:L_mm]
+    P[:Jr] = JR(P)
+    P[:F_kN_j] = P[:F_kN_c] .-JR(P)
+    P[:σ_MPa] = P[:F_kN_c]./(0.25e-6π*P[:d_mm]^2) .*1e-3
+    P[:σ_MPa_j] = P[:F_kN_j]./(0.25e-6π*P[:d_mm]^2) .*1e-3
 end
 # Hardening modulus calculations
 function H_mod(P, ds)
@@ -64,19 +66,24 @@ function H_mod(P, ds)
     deleteat!(ε1,1)
     deleteat!(σ1,1)
     deleteat!(t1,1)
-    dσ = differentiate(t1,σ1,TotalVariation(),0.2,5e-3, maxit=2000)
-    dε = differentiate(t1,ε1,TotalVariation(),0.2,5e-3, maxit=2000)
-    P[:h] = dσ./dε*1e-3 # Calculate the tangent modulus in GPa
+    dσ = differentiate(t1,σ1,TotalVariation(),0.2,5e-2,maxit=2000)
+    dε = differentiate(t1,ε1,TotalVariation(),0.2,5e-2,maxit=2000)
+    III = findfirst(σ1 .> 10) #exclude portion of experiment <0.2% strain, can give misleading results
+    P[:h] = dσ[III:end]./dε[III:end]*1e-3 # Calculate the tangent modulus in GPa, excluding initial non-linearity
     P[:ε_h] = ε1
-    h_max = maximum(P[:h])
+    h_max = maximum(P[:h][III:end])
     II = findfirst(P[:h] .== h_max)
-    P[:E_GPa] = sum(P[:h][P[:h].>0.95h_max])/sum(P[:h].>0.95h_max)
+    P[:E_GPa] = sum(P[:h][P[:h].>0.95h_max])/sum(P[:h].>0.95h_max) #youngs modulus about maximum hardening modulus
     P[:H_GPa] = sum(P[:h][P[:h].<0.4h_max])/sum(P[:h].<0.4h_max)
-    σ2 = σ1[II:end]
-    h = P[:h][II:end]
-    P[:YSa_MPa] = σ2[findfirst(h.<0.9h_max)]
-    P[:YSb_MPa] = σ2[findfirst(h.<0.7h_max)]
-
+    P[:ε_E] = ε1[II]
+    P[:σ_E] = σ1[II]
+    σ2 = σ1[III:end]
+    ε2 = ε1[III:end]
+    h = P[:h][III:end]
+    P[:YSa_MPa] = σ2[findfirst(h.<0.8h_max)] #80% yield
+    P[:εa] = ε2[findfirst(h.<0.8h_max)]
+    P[:YSb_MPa] = σ2[findfirst(h.<0.5h_max)] #50% yield
+    P[:εb] = ε2[findfirst(h.<0.5h_max)]
 end
 # SFP log reader
 function SFP_read(fil)
@@ -112,8 +119,8 @@ function JR(P)
     EaJ = 197000 # Copper activation enthalpy
     n1J = 4.8 # Empirical factor 1
     n2J = 0.22 # Empirical factor 2
-    ε̇j = P[:εr]*(P[:d]/P[:L]) # Jacket strain rate
+    ε̇j = P[:εr]*(P[:d_mm]/P[:L_mm]) # Jacket strain rate
     Jr = 2*10^((log10(ε̇j*exp(EaJ/(8.3145*(P[:T]+278)))))/n1J-n2J) # Copper flow stress at experiment conditions
-    Ja = π*P[:d]*P[:L] # Jacket area
-    JR = Jr.*Ja.*(1 .+(P[:ε].*P[:d]/P[:L])) # Force due to jacket assuming linear increase due to incremental strain
+    Ja = π*P[:d_mm]*P[:L_mm]*1e-6 # Jacket area
+    JR = Jr.*Ja.*((1 .+P[:ε])*(P[:d_mm]/P[:L_mm])).*1e-3 # Force due to jacket assuming linear increase due to incremental strain
 end
