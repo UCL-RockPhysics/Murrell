@@ -54,7 +54,7 @@ function M_read(fid::String)
 end
 
 function t_conv!(P)
-    P[:t_s] = unix2datetime(datetime2unix(DateTime(1904,1,1,0,0,0)) .+(P[:t_s])))
+    P[:t_s] = unix2datetime(datetime2unix(DateTime(1904,1,1,0,0,0)) .+(P[:t_s]))
 end
 
 """
