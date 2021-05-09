@@ -226,7 +226,7 @@ function JR!(P, exp_info)
     EaJ = 197000 # Copper activation enthalpy
     n1J = 4.8 # Empirical factor 1
     n2J = 0.22 # Empirical factor 2
-    ε̇j = P[:εr]*(exp_info[:d_mm]/exp_info[:L_mm]) # Jacket strain rate
+    ε̇j = exp_info[:εr]*(exp_info[:d_mm]/exp_info[:L_mm]) # Jacket strain rate
     Jr = 2*10^((log10(ε̇j*exp(EaJ/(8.3145*(exp_info[:T]+278)))))/n1J-n2J) # Copper flow stress at experiment conditions
     Ja = π*exp_info[:d_mm]*exp_info[:L_mm]*1e-6 # Jacket area
     JR = Jr.*Ja.*(P[:ε]*(exp_info[:d_mm]/exp_info[:L_mm])).*1e-3 # Force due to jacket assuming linear increase due to incremental strain
