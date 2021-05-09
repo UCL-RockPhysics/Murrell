@@ -53,8 +53,8 @@ function M_read(fid::String)
     return P
 end
 
-function t_conv(P)
-    P[:t_date_time] = unix2datetime(datetime2unix(DateTime(1904,1,1,0,0,0)) .+Int.(Round.(P[:t_s]*1000)))
+function t_conv!(P)
+    P[:t_s] = unix2datetime(datetime2unix(DateTime(1904,1,1,0,0,0)) .+(P[:t_s])))
 end
 
 """
