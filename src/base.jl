@@ -1,36 +1,4 @@
 """
-    M_file(P, col::int64)
-
-    Generate filepath and extract indices from spreadsheet log.xlsx
-
-    Arguments
-    - 'col::Int64' : column of file of interest in accompanying spread sheet
-"""
-function M_file(col::Int64)
-    if Sys.iswindows()
-        xf = XLSX.readxlsx("C:\\Users\\cwaha\\Dropbox\\My PC (DESKTOP-8JF2H49)\\Documents\\UCL\\raw_lab data\\log.xlsx")
-    else
-        xf = XLSX.readxlsx("/Users/christopherharbord/Dropbox/My PC (DESKTOP-8JF2H49)/Documents/UCL/raw_lab data/log.xlsx")
-    end
-    sh = xf[XLSX.sheetnames(xf)[1]]
-    info = sh[:]
-    exp_info = Dict()
-    exp_info[:I]=[info[col,4],info[col,5],info[col,6]] # Indice at HP
-    exp_info[:P_exp] = info[col,2]
-    exp_info[:T] = info[col,7] # Temperature of experiment
-    exp_info[:εr] = info[col,8] # Strain rate of test
-    exp_info[:K_mm_kN] = info[col,9] # Machine compliance [mm kN^-1]
-    exp_info[:L_mm] = info[col,10] # Sample length
-    exp_info[:d_mm] = info[col,11] # Diameter of sample [m]
-    fil = info[col,1]
-    if Sys.iswindows()
-        fid = "C:\\Users\\cwaha\\Dropbox\\My PC (DESKTOP-8JF2H49)\\Documents\\UCL\\raw_lab data\\"*fil*".tdms"
-    else
-        fid = "/Users/christopherharbord/Dropbox/My PC (DESKTOP-8JF2H49)/Documents/UCL/raw_lab data/"*fil*".tdms"
-    end
-    return fid, exp_info
-end
-"""
     M_read(P)
 
     Open and read contents of .tdms file
