@@ -1,9 +1,9 @@
 module Murrell
 
-using TDMSReader, XLSX, NoiseRobustDifferentiation, Dates
+using TDMSReader, XLSX, Dates
 using DelimitedFiles, OldTools
 
-export M_file, M_read, M_reduce!, Youngs_mod!, YS!, SFP_read, JR!, M_interp!
+export M_file, M_read, M_reduce!, SFP_read, JR!, M_interp!
 
 include("base.jl")
 
