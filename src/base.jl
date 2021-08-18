@@ -9,15 +9,27 @@
 function M_read(fid::String)
     tdmsIN = readtdms(fid)
     P = Dict()
-    P[:t_s] = tdmsIN.groups["Numeric"]["TimeStamp"].data
-    P[:F_kN] = tdmsIN.groups["Numeric"]["Load"].data
-    P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
-    P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT 1"].data
-    P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT 2"].data
-    P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["Pc 700MPa"].data
-    P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC 1400 MPa"].data
-    P[:Pf_MPa] = tdmsIN.groups["Numeric"]["Pore Pressure"].data
-    P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PP vol"].data
+    if tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.7120499126540936e9
+        P[:t_s] = tdmsIN.groups["Numeric"]["TimeStamp"].data
+        P[:F_kN] = tdmsIN.groups["Numeric"]["Load"].data
+        P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
+        P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT 1"].data
+        P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT 2"].data
+        P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["Pc 700MPa"].data
+        P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC 1400 MPa"].data
+        P[:Pf_MPa] = tdmsIN.groups["Numeric"]["Pore Pressure"].data
+        P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PP vol"].data
+    else
+        P[:t_s] = tdmsIN.groups["Numeric"]["TimeStamp"].data
+        P[:F_kN] = tdmsIN.groups["Numeric"]["Load"].data
+        P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
+        P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT1"].data
+        P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT2"].data
+        P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
+        P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC1400"].data
+        P[:Pf_MPa] = tdmsIN.groups["Numeric"]["PF700"].data
+        P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PFVol"].data
+    end
     return P
 end
 
