@@ -70,8 +70,7 @@ end
     - 'fil::string' : path to file
 """
 function SFP_read(fid)
-    path="/Users/christopherharbord/Dropbox/My PC (DESKTOP-8JF2H49)/Documents/UCL/Furnace_calibration/SFP_logging/"*fil
-    dat = readdlm(path)
+    dat = readdlm(fid)
     headers = dat[:,1]
     I = findall(x->x==headers[1],dat[:,1])
     SFP = Dict()
