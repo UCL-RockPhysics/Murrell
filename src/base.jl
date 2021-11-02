@@ -86,8 +86,8 @@ function SFP_read(fid)
     deleteat!(SFP[:S1],I)
     deleteat!(SFP[:S2],I)
     deleteat!(SFP[:S3],I)
-    deletat!(SFP[:TC1],I)
-    deletat!(SFP[:TC2],I)
+    deleteat!(SFP[:TC1],I)
+    deleteat!(SFP[:TC2],I)
 end
 """
     JR(P, exp_info)
