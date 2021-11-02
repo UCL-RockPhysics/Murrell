@@ -70,7 +70,8 @@ end
     - 'fil::string' : path to file
 """
 function SFP_read(fid)
-    dat = readdlm(fid)
+    path="/Users/christopherharbord/Dropbox/My PC (DESKTOP-8JF2H49)/Documents/UCL/Furnace_calibration/SFP_logging/"*fil
+    dat = readdlm(path)
     headers = dat[:,1]
     I = findall(x->x==headers[1],dat[:,1])
     SFP = Dict()
@@ -79,15 +80,17 @@ function SFP_read(fid)
     SFP[:S1] = dat[:,4]
     SFP[:S2] = dat[:,5]
     SFP[:S3] = dat[:,6]
-    SFP[:TC1] = dat[:,7]
-    SFP[:TC2] = dat[:,8]
+    SFP[:T_lw] = dat[:,7]
+    SFP[:T_uw] = dat[:,8]
+    SFP[:T_sf] = dat[:,9]
     deleteat!(SFP[:t],I)
     deleteat!(SFP[:PF],I)
     deleteat!(SFP[:S1],I)
     deleteat!(SFP[:S2],I)
     deleteat!(SFP[:S3],I)
-    deleteat!(SFP[:TC1],I)
-    deleteat!(SFP[:TC2],I)
+    deleteat!(SFP[:T_lw],I)
+    deleteat!(SFP[:T_uw],I)
+    deleteat!(SFP[:T_sf],I)
     return SFP
 end
 """
@@ -115,4 +118,10 @@ function M_interp!(P, t_UT)
     P[:σ_MPa_i] = lininterp(P[:t_s],P[:σ_MPa_j], t_UT)
     P[:σ3_MPa_i] = lininterp(P[:t_s],P[:Pc2_MPa], t_UT)
     P[:ε_i] = lininterp(P[:t_s],P[:ε], t_UT)
+end
+
+function SFP_interp!(SFP, t_UT)
+    P[:T_lw_i] = lininterp(SFP[:t],SFP[:T_lw], t_UT)
+    P[:T_uw_i] = lininterp(SFP[:t],P[:T_uw], t_UT)
+    P[:T_sf_i] = lininterp(SFP[:t],P[:T_sf], t_UT)
 end
