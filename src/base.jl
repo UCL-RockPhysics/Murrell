@@ -81,7 +81,6 @@ function SFP_read(fid)
     SFP[:S3] = dat[:,6]
     SFP[:TC1] = dat[:,7]
     SFP[:TC2] = dat[:,8]
-    close(dat)
     deleteat!(SFP[:t],I)
     deleteat!(SFP[:PF],I)
     deleteat!(SFP[:S1],I)
