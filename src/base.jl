@@ -48,8 +48,9 @@ end
 
 function M_reduce!(P,exp_info)
     I1 = exp_info[:I][1]
+    Pc_corr = (P[:Pc2].-P[:Pc2][I1]).*0.06
     P[:t_s_c] = P[:t_s].-P[:t_s][I1]
-    P[:F_kN_c] = P[:F_kN] .-P[:F_kN][I1]
+    P[:F_kN_c] = P[:F_kN] .-P[:F_kN][I1].-Pc_corr
     P[:U_mm_c] = ((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1]))./2
     P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*exp_info[:K_mm_kN])
     P[:ε] = P[:U_mm_fc]./exp_info[:L_mm]
@@ -107,10 +108,17 @@ function JR!(P, exp_info)
     n2J = 0.22 # Empirical factor 2
     ε̇j = exp_info[:εr]*(exp_info[:d_mm]/exp_info[:L_mm]) # Jacket strain rate
     Jr = 2*10^((log10(ε̇j*exp(EaJ/(8.3145*(exp_info[:T]+278)))))/n1J-n2J) # Copper flow stress at experiment conditions
-    Ja = π*exp_info[:d_mm]*exp_info[:L_mm]*1e-6 # Jacket area
-    JR = Jr.*Ja.*(P[:ε]*(exp_info[:d_mm]/exp_info[:L_mm])).*1e-3 # Force due to jacket assuming linear increase due to incremental strain
+    Ja = π*exp_info[:d_mm]*1e-3*0.1e-3 # Jacket area
+    JR = Jr.*Ja.*(1+P[:ε]*(exp_info[:d_mm]/exp_info[:L_mm])).*1e-3 # Force due to jacket assuming linear increase due to incremental strain
 end
+"""
+    M_interp!(P, t_UT)
 
+    Interpolate mechanical data to match ultrasonic data pulses
+    #Arguments
+    * 'P' : dictionary containing processed data from the 'Murrell'
+    * exp_info : details of experiment
+"""
 function M_interp!(P, t_UT)
     P[:F_kN_i] = lininterp(P[:t_s],P[:F_kN_j], t_UT)
     P[:U_mm_i] = lininterp(P[:t_s],P[:U_mm_c], t_UT)
@@ -119,6 +127,14 @@ function M_interp!(P, t_UT)
     P[:ε_i] = lininterp(P[:t_s],P[:ε], t_UT)
 end
 
+"""
+    SFP_interp!(P, t_UT)
+
+    Interpolate pump and furnace data to match ultrasonic data pulses
+    #Arguments
+    * SFP : dictionary containing processed data from the pump/furnace logging program
+    * exp_info : details of experiment
+"""
 function SFP_interp!(SFP, t_UT)
     P[:T_lw_i] = lininterp(SFP[:t],SFP[:T_lw], t_UT)
     P[:T_uw_i] = lininterp(SFP[:t],P[:T_uw], t_UT)
