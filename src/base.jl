@@ -48,7 +48,7 @@ end
 
 function M_reduce!(P,exp_info)
     I1 = exp_info[:I][1]
-    Pc_corr = (P[:Pc2].-P[:Pc2][I1]).*0.06
+    Pc_corr = (P[:Pc2_MPa].-P[:Pc2_MPa][I1]).*0.06
     P[:t_s_c] = P[:t_s].-P[:t_s][I1]
     P[:F_kN_c] = P[:F_kN] .-P[:F_kN][I1].-Pc_corr
     P[:U_mm_c] = ((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1]))./2
