@@ -25,10 +25,10 @@ function M_read(fid::String)
         P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
         P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT1"].data
         P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT2"].data
-        P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
+        # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
         P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC1400"].data
-        P[:Pf_MPa] = tdmsIN.groups["Numeric"]["PF700"].data
-        P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PFVol"].data
+        # P[:Pf_MPa] = tdmsIN.groups["Numeric"]["PF700"].data
+        # P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PFVol"].data
     end
     return P
 end
@@ -48,7 +48,7 @@ end
 
 function M_reduce!(P,exp_info)
     I1 = exp_info[:I][1]
-    Pc_corr = (P[:Pc2].-P[:Pc2][I1]).*0.06
+    Pc_corr = (P[:Pc2_MPa].-P[:Pc2_MPa][I1]).*0.06
     P[:t_s_c] = P[:t_s].-P[:t_s][I1]
     P[:F_kN_c] = P[:F_kN] .-P[:F_kN][I1].-Pc_corr
     P[:U_mm_c] = ((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1]))./2
