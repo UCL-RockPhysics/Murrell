@@ -15,18 +15,27 @@ function M_read(fid::String)
         P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
         P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT 1"].data
         P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT 2"].data
-        P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["Pc 700MPa"].data
+        # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["Pc 700MPa"].data
         P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC 1400 MPa"].data
-        P[:Pf_MPa] = tdmsIN.groups["Numeric"]["Pore Pressure"].data
-        P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PP vol"].data
+        # P[:Pf_MPa] = tdmsIN.groups["Numeric"]["Pore Pressure"].data
+        # P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PP vol"].data
     else
-        P[:t_s] = tdmsIN.groups["Numeric"]["TimeStamp"].data
-        P[:F_kN] = tdmsIN.groups["Numeric"]["Load"].data
-        P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
-        P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT1"].data
-        P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT2"].data
+        A = zeros(length(tdmsIN.groups["Numeric"]["TimeStamp"].data),6)
+        A[1,:] = tdmsIN.groups["Numeric"]["TimeStamp"].data
+        A[2,:] = tdmsIN.groups["Numeric"]["Load"].data
+        A[3,:] = tdmsIN.groups["Numeric"]["Displacement"].data
+        A[4,:] = tdmsIN.groups["Numeric"]["LVDT1"].data
+        A[5,:] = tdmsIN.groups["Numeric"]["LVDT2"].data
         # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
-        P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC1400"].data
+        A[6,:] = tdmsIN.groups["Numeric"]["PC1400"].data
+        A = unique(A, dims=1)
+        P[:t_s] = A[1,:]
+        P[:F_kN] = A[2,:]
+        P[:Ua_mm] = A[3,:]
+        P[:U1_mm] = A[4,:]
+        P[:U2_mm] = A[5,:]
+        # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
+        P[:Pc2_MPa] = A[6,:]
         # P[:Pf_MPa] = tdmsIN.groups["Numeric"]["PF700"].data
         # P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PFVol"].data
     end
@@ -56,8 +65,8 @@ function M_reduce!(P,exp_info)
     P[:ε] = P[:U_mm_fc]./exp_info[:L_mm]
     P[:Jr] = JR!(P, exp_info)
     P[:F_kN_j] = P[:F_kN_c] .-P[:Jr]
-    P[:σ_MPa] = P[:F_kN_c]./(0.25e-6π*exp_info[:d_mm]^2) .*1e-3
-    P[:σ_MPa_j] = P[:F_kN_j]./(0.25e-6π*exp_info[:d_mm]^2) .*1e-3
+    P[:σ_MPa] = P[:F_kN_c]./(0.25e-6π*(exp_info[:d_mm].* (1 .+P[:ε])).^2) .*1e-3
+    P[:σ_MPa_j] = P[:F_kN_j]./(0.25e-6π*exp_info[:d_mm].* (1 .+P[:ε]).^2) .*1e-3
 end
 
 
