@@ -20,7 +20,7 @@ function M_read(fid::String)
         # P[:Pf_MPa] = tdmsIN.groups["Numeric"]["Pore Pressure"].data
         # P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PP vol"].data
     else
-        A = zeros(length(tdmsIN.groups["Numeric"]["TimeStamp"].data),6)
+        A = zeros(6,length(tdmsIN.groups["Numeric"]["TimeStamp"].data))
         A[1,:] = tdmsIN.groups["Numeric"]["TimeStamp"].data
         A[2,:] = tdmsIN.groups["Numeric"]["Load"].data
         A[3,:] = tdmsIN.groups["Numeric"]["Displacement"].data
@@ -28,7 +28,7 @@ function M_read(fid::String)
         A[5,:] = tdmsIN.groups["Numeric"]["LVDT2"].data
         # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
         A[6,:] = tdmsIN.groups["Numeric"]["PC1400"].data
-        A = unique(A, dims=1)
+        A = unique(A, dims=2)
         P[:t_s] = A[1,:]
         P[:F_kN] = A[2,:]
         P[:Ua_mm] = A[3,:]
