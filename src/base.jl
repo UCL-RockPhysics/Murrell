@@ -66,7 +66,7 @@ function M_reduce!(P,exp_info)
     P[:Jr] = JR!(P, exp_info)
     P[:F_kN_j] = P[:F_kN_c] .-P[:Jr]
     P[:σ_MPa] = P[:F_kN_c]./((π*0.5e-3*exp_info[:d_mm] .*(1 .+P[:ε])) .^2) .*1e-4
-    P[:σ_MPa_j] = P[:F_kN_j]./((π*0.5e-3*exp_info[:d_mm] .*(1 .+P[:ε]) .^2) .*1e-4
+    P[:σ_MPa_j] = P[:F_kN_j]./((π*0.5e-3*exp_info[:d_mm] .*(1 .+P[:ε])) .^2) .*1e-4
 end
 
 
