@@ -145,7 +145,7 @@ end
     * exp_info : details of experiment
 """
 function SFP_interp!(SFP, t_UT)
-    SFP[:T_lw_i] = lininterp(SFP[:t],SFP[:T_lw], t_UT)
-    SFP[:T_uw_i] = lininterp(SFP[:t],P[:T_uw], t_UT)
-    SFP[:T_sf_i] = lininterp(SFP[:t],P[:T_sf], t_UT)
+    SFP[:T_lw_i] = lininterp(float.(SFP[:t]),float.(SFP[:T_lw]), t_UT)
+    SFP[:T_uw_i] = lininterp(float.(SFP[:t]),float.(SFP[:T_uw]), t_UT)
+    SFP[:T_sf_i] = lininterp(float.(SFP[:t]),float.(P[:T_sf]), t_UT)
 end
