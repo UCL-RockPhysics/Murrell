@@ -150,9 +150,5 @@ end
 function SFP_interp!(SFP, t_UT)
     SFP[:T_lw_i] = lininterp(float.(SFP[:t]),float.(SFP[:T_lw]), t_UT)
     SFP[:T_uw_i] = lininterp(float.(SFP[:t]),float.(SFP[:T_uw]), t_UT)
-<<<<<<< HEAD
     SFP[:T_sf_i] = lininterp(float.(SFP[:t]),float.(SFP[:T_sf]), t_UT)
-=======
-    SFP[:T_sf_i] = lininterp(float.(SFP[:t]),float.(P[:T_sf]), t_UT)
->>>>>>> fac916129f55f14be3503f4a602c903279f438a1
 end
