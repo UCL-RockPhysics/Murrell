@@ -55,7 +55,7 @@ end
     * exp_info : dictionary containing experimental parameters
 """
 
-function M_reduce!(P,exp_info)
+function M_reduce!(P,exp_info; stresscorr=false)
     I1 = exp_info[:I][1]
     Pc_corr = (P[:Pc2_MPa].-P[:Pc2_MPa][I1]).*0.06
     P[:t_s_c] = P[:t_s].-P[:t_s][I1]
@@ -65,8 +65,11 @@ function M_reduce!(P,exp_info)
     P[:ε] = P[:U_mm_fc]./exp_info[:L_mm]
     P[:Jr] = JR!(P, exp_info)
     P[:F_kN_j] = P[:F_kN_c] .-P[:Jr]
-    # P[:σ_MPa] = P[:F_kN_c]./((π*0.5e-3*exp_info[:d_mm] .*(1 .+P[:ε])) .^2) .*1e-2
-    P[:σ_MPa_j] = P[:F_kN_c]./(π.*(0.5e-3*exp_info[:d_mm].*(1 .+P[:ε])).^2).*1e-3
+    if stresscorr == true
+        P[:σ_MPa_j] = P[:F_kN_c]./(π.*(0.5e-3*exp_info[:d_mm].*(1 .+P[:ε])).^2).*1e-3
+    else
+        P[:σ_MPa_j] = P[:F_kN_c]./(π.*(0.5e-3*exp_info[:d_mm]).^2).*1e-3
+    end
 end
 
 
