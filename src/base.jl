@@ -55,20 +55,20 @@ end
     * exp_info : dictionary containing experimental parameters
 """
 
-function M_reduce!(P,exp_info; stresscorr=false)
+function M_reduce!(P,exp_info; stresscorr=true)
     I1 = exp_info[:I][1]
-    Pc_corr = (P[:Pc2_MPa].-P[:Pc2_MPa][I1]).*0.06
-    P[:t_s_c] = P[:t_s].-P[:t_s][I1]
-    P[:F_kN_c] = P[:F_kN] .-P[:F_kN][I1].-Pc_corr
-    P[:U_mm_c] = ((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1]))./2
-    P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*exp_info[:K_mm_kN])
-    P[:ε] = P[:U_mm_fc]./exp_info[:L_mm]
-    P[:Jr] = JR!(P, exp_info)
-    P[:F_kN_j] = P[:F_kN_c] .-P[:Jr]
+    Pc_corr = (P[:Pc2_MPa].-P[:Pc2_MPa][I1]).*0.06 # Correction to seal friction for confining pressure change relative to hitpoint
+    P[:t_s_c] = P[:t_s].-P[:t_s][I1] #
+    P[:F_kN_c] = P[:F_kN] .-P[:F_kN][I1].-Pc_corr # Correct force measurements
+    P[:U_mm_c] = ((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1]))./2 # Compute and correct axial displacement
+    P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*exp_info[:K_mm_kN]) # Correct displacement for machine stiffness
+    P[:ε] = -log.(1 .-(P[:U_mm_fc]./exp_info[:L_mm])) # Compute natural strain
+    P[:Jr] = JR!(P, exp_info) # Get force resulting from jacket
+    P[:F_kN_j] = P[:F_kN_c] .-P[:Jr] # Correct force for jacket rheology
     if stresscorr == true
-        P[:σ_MPa_j] = P[:F_kN_c]./(π.*(0.5e-3*exp_info[:d_mm].*(1 .+P[:ε])).^2).*1e-3
+        P[:σ_MPa_j] = P[:F_kN_c]./(π.*(0.5e-3*exp_info[:d_mm].*(1 .+P[:ε])).^2).*1e-3 # Apply surface area correction to stress
     else
-        P[:σ_MPa_j] = P[:F_kN_c]./(π.*(0.5e-3*exp_info[:d_mm]).^2).*1e-3
+        P[:σ_MPa_j] = P[:F_kN_c]./(π.*(0.5e-3*exp_info[:d_mm]).^2).*1e-3 # Do not apply surface area correction
     end
 end
 
@@ -120,7 +120,7 @@ function JR!(P, exp_info)
     n2J = 0.22 # Empirical factor 2
     ε̇j = exp_info[:εr]*(exp_info[:d_mm]/exp_info[:L_mm]) # Jacket strain rate
     Jr = 2*10^((log10(ε̇j*exp(EaJ/(8.3145*(exp_info[:T]+278)))))/n1J-n2J) # Copper flow stress at experiment conditions
-    Ja = π*exp_info[:d_mm]*1e-3*0.1e-3 # Jacket area
+    Ja = π*(5.2e-3^2-5e-3^2)  # Jacket area
     JR = Jr.*Ja.*(1 .+P[:ε]).*1e-3 # Force due to jacket assuming linear increase due to incremental strain
 end
 """
