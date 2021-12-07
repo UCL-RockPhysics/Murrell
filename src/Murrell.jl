@@ -1,7 +1,6 @@
 module Murrell
 
-using TDMSReader, XLSX, Dates
-using DelimitedFiles, OldTools
+using TDMSReader, Dates, DelimitedFiles, OldTools, Statistics
 
 export M_read, M_reduce!, SFP_read, JR!, M_interp!, SFP_interp!
 

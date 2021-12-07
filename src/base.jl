@@ -56,11 +56,13 @@ end
 """
 
 function M_reduce!(P,exp_info; stresscorr=true)
+    dt = P[:t_s][2].-P[:t_s][1]
+    sf = int(ceil(10/dt))
     I1 = exp_info[:I][1]
-    Pc_corr = (P[:Pc2_MPa].-P[:Pc2_MPa][I1]).*0.06 # Correction to seal friction for confining pressure change relative to hitpoint
+    Pc_corr = movingaverage((P[:Pc2_MPa].-P[:Pc2_MPa][I1]),sf).*0.06 # Correction to seal friction for confining pressure change relative to hitpoint
     P[:t_s_c] = P[:t_s].-P[:t_s][I1] #
-    P[:F_kN_c] = P[:F_kN] .-P[:F_kN][I1].-Pc_corr # Correct force measurements
-    P[:U_mm_c] = ((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1]))./2 # Compute and correct axial displacement
+    P[:F_kN_c] = movingaverage(P[:F_kN] .-P[:F_kN][I1],sf).-Pc_corr # Correct force measurements
+    P[:U_mm_c] = movingaverage(((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1])),sf)./2 # Compute and correct axial displacement
     P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*exp_info[:K_mm_kN]) # Correct displacement for machine stiffness
     P[:ε] = -log.(1 .-(P[:U_mm_fc]./exp_info[:L_mm])) # Compute natural strain
     P[:Jr] = JR!(P, exp_info) # Get force resulting from jacket
