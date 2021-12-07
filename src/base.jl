@@ -57,7 +57,7 @@ end
 
 function M_reduce!(P,exp_info; stresscorr=true)
     dt = P[:t_s][2].-P[:t_s][1]
-    sf = int(ceil(10/dt))
+    sf = Int(ceil(10/dt))
     I1 = exp_info[:I][1]
     Pc_corr = movingaverage((P[:Pc2_MPa].-P[:Pc2_MPa][I1]),sf).*0.06 # Correction to seal friction for confining pressure change relative to hitpoint
     P[:t_s_c] = P[:t_s].-P[:t_s][I1] #
