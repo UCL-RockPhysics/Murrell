@@ -61,7 +61,7 @@ function M_reduce!(P,exp_info; stresscorr=true)
     I1 = exp_info[:I][1]
     P[:σ3_MPa] = movingaverage((P[:Pc2_MPa]),sf)
     P[:Pc_corr] = zeros(length(P[:σ3_MPa]))
-    for i 1:length(P[:Pc_corr])
+    for i = 1:length(P[:Pc_corr])
         if P[:σ3_MPa][i] < 250       # Correction to seal friction for confining pressure change relative to hitpoint
             P[:Pc_corr][i] = 0.0219*P[:σ3_MPa][i] +0.8763
         else
