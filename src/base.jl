@@ -59,9 +59,18 @@ function M_reduce!(P,exp_info; stresscorr=true)
     dt = P[:t_s][2].-P[:t_s][1]
     sf = Int(ceil(1/dt))
     I1 = exp_info[:I][1]
-    Pc_corr = movingaverage((P[:Pc2_MPa].-P[:Pc2_MPa][I1]),sf).*0.06 # Correction to seal friction for confining pressure change relative to hitpoint
+    P[:σ3_MPa] = movingaverage((P[:Pc2_MPa]),sf)
+    P[:Pc_corr] = zeros(length(P[:σ3_MPa]))
+    for i 1:length(P[:Pc_corr])
+        if P[:σ3_MPa][i] < 250       # Correction to seal friction for confining pressure change relative to hitpoint
+            P[:Pc_corr][i] = 0.0219*P[:σ3_MPa][i] +0.8763
+        else
+            P[:Pc_corr][i] = 8.569e-5*P[:σ3_MPa][i]^2 -0.017*P[:σ3_MPa][i] +5.3616868619086855
+        end
+    end
+    P[:Pc_corr] .-= P[:Pc_corr][I1]
     P[:t_s_c] = P[:t_s].-P[:t_s][I1] #
-    P[:F_kN_c] = movingaverage(P[:F_kN] .-P[:F_kN][I1],sf).-Pc_corr # Correct force measurements
+    P[:F_kN_c] = movingaverage(P[:F_kN] .-P[:F_kN][I1],sf).-P[:Pc_corr] # Correct force measurements
     P[:U_mm_c] = movingaverage(((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1])),sf)./2 # Compute and correct axial displacement
     P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*exp_info[:K_mm_kN]) # Correct displacement for machine stiffness
     P[:ε] = -log.(1 .-(P[:U_mm_fc]./exp_info[:L_mm])) # Compute natural strain
