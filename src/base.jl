@@ -61,6 +61,7 @@ function M_reduce!(P,exp_info; stresscorr=true)
     I1 = exp_info[:I][1]
     I2 = exp_info[:I][2]
     I3 = exp_info[:IE][4]
+    I4 = exp_info[:I][3]
     P[:σ3_MPa] = movingaverage((P[:Pc2_MPa]),sf)
     P[:Pc_corr] = zeros(length(P[:σ3_MPa]))
     for i = 1:length(P[:Pc_corr])
