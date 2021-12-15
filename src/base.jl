@@ -90,7 +90,7 @@ function M_reduce!(P,exp_info; stresscorr=true)
                                 ((P[:σ3_MPa][I2+1:I3].-P[:σ3_MPa][I2]).*1.26e-3) # Correct displacement for machine stiffness and confining pressure applying a correction of 1.26 µm/MPa
     P[:U_mm_fc][I3+1:end]   =   P[:U_mm_fc][I3].+
                                 (P[:U_mm_c][I3+1:end].-P[:U_mm_c][I3]).-
-                                ((P[:F_kN_c][I3+1:end].-P[:F_kN_c][i3])*exp_info[:K_mm_kN]).-
+                                ((P[:F_kN_c][I3+1:end].-P[:F_kN_c][I3])*exp_info[:K_mm_kN]).-
                                 ((P[:σ3_MPa][I3+1:end].-P[:σ3_MPa][I3])*1.26e-3)
     P[:U_mm_c] .-= P[:U_mm_c][I1]
     P[:U_mm_fc] .-= P[:U_mm_fc][I1]
