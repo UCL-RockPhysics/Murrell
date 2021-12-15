@@ -83,9 +83,10 @@ function M_reduce!(P,exp_info; stresscorr=true)
     P[:U_mm_c] = movingaverage((P[:U1_mm].+P[:U2_mm]),sf)./2 # Compute and correct axial displacement
     ## Displacement corrections based on load sense
     P[:U_mm_fc] = zeros(length(P[:U_mm_c]))
-    P[:U_mm_fc][1:I2]       =   P[:U_mm_c][1:I2].-
-                                (P[:F_kN_c][1:I2]*exp_info[:K_mm_kN]).-
-                                (P[:σ3_MPa][1:I2]*1.26e-3) # Correct displacement for machine stiffness and confining pressure applying a correction of 1.26 µm/MPa
+
+    P[:U_mm_fc][I1:I2]       =   P[:U_mm_c][I1:I2].-
+                                (P[:F_kN_c][I1:I2]*exp_info[:K_mm_kN]).-
+                                (P[:σ3_MPa][I1:I2]*1.26e-3) # Correct displacement for machine stiffness and confining pressure applying a correction of 1.26 µm/MPa
     P[:U_mm_fc][I2+1:I3]    =   P[:U_mm_fc][I2].-
                                 ((P[:σ3_MPa][I2+1:I3].-P[:σ3_MPa][I2]).*1.26e-3) # Correct displacement for machine stiffness and confining pressure applying a correction of 1.26 µm/MPa
     P[:U_mm_fc][I3+1:end]   =   P[:U_mm_fc][I3].+
@@ -94,6 +95,7 @@ function M_reduce!(P,exp_info; stresscorr=true)
                                 ((P[:σ3_MPa][I3+1:end].-P[:σ3_MPa][I3])*1.26e-3)
     P[:U_mm_c] .-= P[:U_mm_c][I1]
     P[:U_mm_fc] .-= P[:U_mm_fc][I1]
+    P[:U_mm_fc][1:I1] .= 0
     ## Strain computation
     P[:ε] = -log.(1 .-(P[:U_mm_fc]./exp_info[:L_mm])) # Compute natural strain
     P[:Jr] = JR!(P, exp_info) # Get force resulting from jacket
