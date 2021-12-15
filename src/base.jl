@@ -83,7 +83,7 @@ function M_reduce!(P,exp_info; stresscorr=true)
     P[:U_mm_c] = movingaverage((P[:U1_mm].+P[:U2_mm]),sf)./2 # Compute and correct axial displacement
     ## Displacement corrections based on load sense
     P[:U_mm_fc] = zeros(length(P[:U_mm_c]))
-    P[:U_mm_fc][1:I1-1]     =   -(P[:σ3_MPa][1:I1-1] ./45.8e3).*exp_info[:L_mm]
+    P[:U_mm_fc][1:I1-1]     =   (P[:σ3_MPa][1:I1-1] ./45.8e3).*exp_info[:L_mm]
     P[:U_mm_fc][I1:I2]      =   P[:U_mm_fc][I1-1].+
                                 (P[:U_mm_c][I1:I2].-P[:U_mm_c][I1-1]).-
                                 (P[:F_kN_c][I1:I2]*exp_info[:K_mm_kN]).-
