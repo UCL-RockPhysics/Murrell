@@ -59,27 +59,25 @@ function M_reduce!(P,exp_info; stresscorr=true)
     dt = P[:t_s][2].-P[:t_s][1]
     sf = Int(ceil(1/dt))
     I1 = exp_info[:I][1]
-    I2 = exp_info[:I][1]:exp_info[:IE][4]
+    I2 = exp_info[:I][2]
+    I3 = exp_info[:IE][4]
     P[:σ3_MPa] = movingaverage((P[:Pc2_MPa]),sf)
     P[:Pc_corr] = zeros(length(P[:σ3_MPa]))
     for i = 1:length(P[:Pc_corr])
         if P[:σ3_MPa][i] < 250       # Correction to seal friction for confining pressure change relative to hitpoint
-            if i > I2[1]
-                P[:Pc_corr][i] = -0.0219*P[:σ3_MPa][i] - 0.8763
-            else
-                P[:Pc_corr][i] = 0.0219*P[:σ3_MPa][i] +0.8763
-            end
+            P[:Pc_corr][i] = 0.0219*P[:σ3_MPa][i] +0.8763
         else
-            if i > I2[1]
-                P[:Pc_corr][i] = -8.569e-5*P[:σ3_MPa][i]^2 +0.017*P[:σ3_MPa][i] -5.3616868619086855
-            else
-                P[:Pc_corr][i] = 8.569e-5*P[:σ3_MPa][i]^2 -0.017*P[:σ3_MPa][i] +5.3616868619086855
-            end
+            P[:Pc_corr][i] = 8.569e-5*P[:σ3_MPa][i]^2 -0.017*P[:σ3_MPa][i] +5.3616868619086855
         end
     end
     P[:Pc_corr] .-= P[:Pc_corr][I1]
     P[:t_s_c] = P[:t_s].-P[:t_s][I1] #
-    P[:F_kN_c] = movingaverage(P[:F_kN] .-P[:F_kN][I1],sf).-P[:Pc_corr] # Correct force measurements
+    P[:F_kN_c] = zeros(length(P[:F_kN]),1)
+    F_smooth = movingaverage(P[:F_kN] .-P[:F_kN][I1],sf)
+    P[:F_kN_c][1:I2] = F_smooth[1:I2].-P[:Pc_corr][1:I2] # Correct force measurements where load is positive sense
+    P[:F_kN_c][I2+1:I3] = P[:F_kN_c][I2] .-(P[:Pc_corr][I2].-P[:Pc_corr][I2+1:I3]) # Correct for piston locked by friction
+    P[:F_kN_c][I3+1:I4] = F_smooth[I3+1:I4] .-P[:Pc_corr][I3+1:I4] .+P[:F_kN_c][I3] # Correct unload for offset resulting from friction until out of contact
+    P[:F_kN_c][I4+1:end] = F_smooth[I4+1:end] .-P[:Pc_corr][I3+1:I4] .+P[:F_kN_c][I4+1] # Now differential load is given by seal friction, correct for this
     P[:U_mm_c] = movingaverage(((P[:U1_mm].+P[:U2_mm]).-(P[:U1_mm][I1]+P[:U2_mm][I1])),sf)./2 # Compute and correct axial displacement
     P[:U_mm_fc] = P[:U_mm_c] .-(P[:F_kN_c]*exp_info[:K_mm_kN]) # Correct displacement for machine stiffness
     P[:ε] = -log.(1 .-(P[:U_mm_fc]./exp_info[:L_mm])) # Compute natural strain
