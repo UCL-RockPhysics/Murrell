@@ -168,11 +168,11 @@ end
     * exp_info : details of experiment
 """
 function M_interp!(P, t_UT)
-    P[:F_kN_i] = lininterp(P[:t_s],P[:F_kN_j], t_UT)
-    P[:U_mm_i] = lininterp(P[:t_s],P[:U_mm_c], t_UT)
-    P[:σ_MPa_i] = lininterp(P[:t_s],P[:σ_MPa_j], t_UT)
-    P[:σ3_MPa_i] = lininterp(P[:t_s],P[:Pc2_MPa], t_UT)
-    P[:ε_i] = lininterp(P[:t_s],P[:ε], t_UT)
+    P[:F_kN_i] = lininterp(P[:t_s],vec(P[:F_kN_j]), t_UT)
+    P[:U_mm_i] = lininterp(P[:t_s],vec(P[:U_mm_c]), t_UT)
+    P[:σ_MPa_i] = lininterp(P[:t_s],vec(P[:σ_MPa_j]), t_UT)
+    P[:σ3_MPa_i] = lininterp(P[:t_s],vec(P[:Pc2_MPa]), t_UT)
+    P[:ε_i] = lininterp(P[:t_s],vec(P[:ε]), t_UT)
 end
 
 """
