@@ -105,7 +105,7 @@ function M_reduce!(P,exp_info; stresscorr=true, unloadcorr=true)
         P[:U_mm_fc] .-= P[:U_mm_fc][1]
         P[:U_mm_fc][1:I1] .= 0
     else
-        P[:F_kN_c] = P[:F_kN_c].-P[:Pc_corr] .-P[:F_kN][I1]
+        P[:F_kN_c] = P[:F_kN].-P[:Pc_corr] .-P[:F_kN][I1]
         P[:U_mm_c] .-= P[:U_mm_c][I1]
         P[:U_mm_fc] = P[:U_mm_c].-P[:F_kN_c].*exp_info[:K_mm_kN]
         P[:U_mm_fc][1:I1] .= 0
