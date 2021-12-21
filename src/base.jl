@@ -169,7 +169,7 @@ function JR!(P, exp_info)
     n2J = 0.22 # Empirical factor 2
     ε̇j = exp_info[:εr] # Jacket strain rate
     Jr = 2*10^((log10(ε̇j*exp(EaJ/(8.3145*(exp_info[:T]+278)))))/n1J-n2J) # Copper flow stress at experiment conditions
-    Ja = π*(5.2e-3^2-5e-3^2)  # Jacket area
+    Ja = π*(5.25e-3^2-5e-3^2)  # Jacket area
     JR = Jr.*Ja.*(1 .+P[:ε]).*1e-3 # Force due to jacket assuming linear increase due to incremental strain
 end
 """
