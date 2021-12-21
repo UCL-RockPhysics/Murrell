@@ -55,7 +55,7 @@ end
     * exp_info : dictionary containing experimental parameters
 """
 
-function M_reduce!(P,exp_info; stresscorr=true)
+function M_reduce!(P,exp_info; stresscorr=true, unloadcorr=true)
     dt = P[:t_s][2].-P[:t_s][1]
     sf = Int(ceil(1/dt))
     I1 = exp_info[:I][1]
@@ -73,30 +73,43 @@ function M_reduce!(P,exp_info; stresscorr=true)
     end
     P[:Pc_corr] .-= P[:Pc_corr][I1]
     P[:t_s_c] = P[:t_s].-P[:t_s][I1] #
-    P[:F_kN_c] = zeros(length(P[:F_kN]),1)
-    F_smooth = movingaverage(P[:F_kN] .-P[:F_kN][I1],sf)
-    ## Force corrections accounting for loading sense and unloading behaviour
-    P[:F_kN_c][1:I2] = F_smooth[1:I2].-P[:Pc_corr][1:I2] # Correct force measurements where load is positive sense
-    P[:F_kN_c][I2+1:I3] = P[:F_kN_c][I2] .-(P[:Pc_corr][I2].-P[:Pc_corr][I2+1:I3]) # Correct for piston locked by friction
-    P[:F_kN_c][I3+1:I4] = P[:F_kN_c][I3] .+(F_smooth[I3+1:I4].-F_smooth[I3]) .-(P[:Pc_corr][I3].-P[:Pc_corr][I3+1:I4]) # Correct unload for offset resulting from friction until out of contact
-    P[:F_kN_c][I4+1:end] = P[:F_kN_c][I4] .+(F_smooth[I4+1:end].-F_smooth[I4]) .-(P[:Pc_corr][I4].-P[:Pc_corr][I4+1:end]) # Now differential load is given by seal friction, correct for this
-    P[:U_mm_c] = movingaverage((P[:U1_mm].+P[:U2_mm]),sf)./2 # Compute and correct axial displacement
-    ## Displacement corrections based on load sense
-    P[:U_mm_fc] = zeros(length(P[:U_mm_c]))
-    P[:U_mm_fc][1:I1-1]     =   (P[:σ3_MPa][1:I1-1] ./45.8e3).*exp_info[:L_mm]
-    P[:U_mm_fc][I1:I2]      =   P[:U_mm_fc][I1-1].+
+    P[:U_mm_c] = movingaverage((P[:U1_mm].+P[:U2_mm]),sf)./2
+    if unloadcorr == true
+        P[:F_kN_c] = zeros(length(P[:F_kN]),1)
+        F_smooth = movingaverage(P[:F_kN] .-P[:F_kN][I1],sf)
+        ## Force corrections accounting for loading sense and unloading behaviour
+        P[:F_kN_c][1:I2] = F_smooth[1:I2].-P[:Pc_corr][1:I2] # Correct force measurements where load is positive sense
+        P[:F_kN_c][I2+1:I3] =   P[:F_kN_c][I2] .-
+                                (P[:Pc_corr][I2].-
+                                P[:Pc_corr][I2+1:I3]) # Correct for piston locked by friction
+        P[:F_kN_c][I3+1:I4] =   P[:F_kN_c][I3] .+
+                                (F_smooth[I3+1:I4].-F_smooth[I3]) .-
+                                (P[:Pc_corr][I3].-P[:Pc_corr][I3+1:I4]) # Correct unload for offset resulting from friction until out of contact
+        P[:F_kN_c][I4+1:end] =  P[:F_kN_c][I4] .+
+                                (F_smooth[I4+1:end].-F_smooth[I4]) .-
+                                (P[:Pc_corr][I4].-P[:Pc_corr][I4+1:end]) # Now differential load is given by seal friction, correct for this
+        ## Displacement corrections based on load sense
+        P[:U_mm_fc] = zeros(length(P[:U_mm_c]))
+        P[:U_mm_fc][1:I1-1]     =   (P[:σ3_MPa][1:I1-1] ./45.8e3).*exp_info[:L_mm]
+        P[:U_mm_fc][I1:I2]      =   P[:U_mm_fc][I1-1].+
                                 (P[:U_mm_c][I1:I2].-P[:U_mm_c][I1-1]).-
                                 (P[:F_kN_c][I1:I2]*exp_info[:K_mm_kN]).-
                                 ((P[:σ3_MPa][I1-1].-P[:σ3_MPa][I1:I2])*1.26e-3) # Correct displacement for machine stiffness and confining pressure applying a correction of 1.26 µm/MPa
-    P[:U_mm_fc][I2+1:I3]    =   P[:U_mm_fc][I2].-
+        P[:U_mm_fc][I2+1:I3]    =   P[:U_mm_fc][I2].-
                                 ((P[:σ3_MPa][I2+1:I3].-P[:σ3_MPa][I2]).*1.26e-3) # Correct displacement for machine stiffness and confining pressure applying a correction of 1.26 µm/MPa
-    P[:U_mm_fc][I3+1:end]   =   P[:U_mm_fc][I3].+
+        P[:U_mm_fc][I3+1:end]   =   P[:U_mm_fc][I3].+
                                 (P[:U_mm_c][I3+1:end].-P[:U_mm_c][I3]).-
                                 ((P[:F_kN_c][I3+1:end].-P[:F_kN_c][I3])*exp_info[:K_mm_kN]).-
                                 ((P[:σ3_MPa][I3+1:end].-P[:σ3_MPa][I3])*1.26e-3)
-    P[:U_mm_c] .-= P[:U_mm_c][I1]
-    P[:U_mm_fc] .-= P[:U_mm_fc][I1]
-    P[:U_mm_fc][1:I1] .= 0
+        P[:U_mm_c] .-= P[:U_mm_c][I1]
+        P[:U_mm_fc] .-= P[:U_mm_fc][1]
+        P[:U_mm_fc][1:I1] .= 0
+    else
+        P[:F_kN_c] = P[:F_kN_c].-P[:Pc_corr] .-P[:F_kN][I1]
+        P[:U_mm_c] .-= P[:U_mm_c][I1]
+        P[:U_mm_fc] = P[:U_mm_c].-P[:F_kN_c].*exp_info[:K_mm_kN]
+        P[:U_mm_fc][1:I1] .= 0
+    end
     ## Strain computation
     P[:ε] = -log.(1 .-(P[:U_mm_fc]./exp_info[:L_mm])) # Compute natural strain
     P[:Jr] = JR!(P, exp_info) # Get force resulting from jacket
