@@ -111,8 +111,7 @@ function M_reduce!(P,exp_info; stresscorr=true, unloadcorr=true)
         P[:U_mm_fc][1:I1] .= 0
     end
     ## Strain computation
-    P[:ε] = -log.(1 .-(P[:U_mm_fc].-P[:U_mm_fc][I1])./exp_info[:L_mm]) # Compute natural strain
-    P[:ε] .-= P[:ε][I1]
+    P[:ε] = -log.(1 .-(P[:U_mm_fc].-P[:U_mm_fc][I1+1])./exp_info[:L_mm]) # Compute natural strain
     P[:Jr] = JR!(P, exp_info) # Get force resulting from jacket
     P[:F_kN_j] = P[:F_kN_c] .-P[:Jr] # Correct force for jacket rheology
     if stresscorr == true
