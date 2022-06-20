@@ -4,21 +4,24 @@
     Open and read contents of .tdms file
     #Arguments
     - fid : file path string
-    return P
+    return P a dictionary containing:
+    * :t_s : time in seconds, LabView time base (see https://tinyurl.com/56yhfrw4)
+    * :F_kN : raw record of external load
+    * :Ua_mm : actuator displacement (mm)
+    * :U1_mm : LVDT1 displacement (mm)
+    * :U2_mm : LVDT2 displacement (mm)
+    * :Pc2_MPa : gas pressure (MPa)
 """
 function M_read(fid::String)
     tdmsIN = readtdms(fid)
     P = Dict()
-    if tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.7120499126540936e9
+    if tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.7120499126540936e9 # This is here since the LabView software was updated and some of the variable names changed
         P[:t_s] = tdmsIN.groups["Numeric"]["TimeStamp"].data
         P[:F_kN] = tdmsIN.groups["Numeric"]["Load"].data
         P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
         P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT 1"].data
         P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT 2"].data
-        # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["Pc 700MPa"].data
         P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC 1400 MPa"].data
-        # P[:Pf_MPa] = tdmsIN.groups["Numeric"]["Pore Pressure"].data
-        # P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PP vol"].data
     else
         A = zeros(6,length(tdmsIN.groups["Numeric"]["TimeStamp"].data))
         A[1,:] = tdmsIN.groups["Numeric"]["TimeStamp"].data
@@ -26,36 +29,58 @@ function M_read(fid::String)
         A[3,:] = tdmsIN.groups["Numeric"]["Displacement"].data
         A[4,:] = tdmsIN.groups["Numeric"]["LVDT1"].data
         A[5,:] = tdmsIN.groups["Numeric"]["LVDT2"].data
-        # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
         A[6,:] = tdmsIN.groups["Numeric"]["PC1400"].data
-        A = unique(A, dims=2)
+        A = unique(A, dims=2) # There is an occassional bug where data is written to the file twice
         P[:t_s] = A[1,:]
         P[:F_kN] = A[2,:]
         P[:Ua_mm] = A[3,:]
         P[:U1_mm] = A[4,:]
         P[:U2_mm] = A[5,:]
-        # P[:Pc1_MPa] = tdmsIN.groups["Numeric"]["PC700"].data
         P[:Pc2_MPa] = A[6,:]
-        # P[:Pf_MPa] = tdmsIN.groups["Numeric"]["PF700"].data
-        # P[:PpVol_mm3] = tdmsIN.groups["Numeric"]["PFVol"].data
     end
     return P
 end
-
+"""
+function t_conv!(P)
+    convert LabView timestamp to Unix timestamp
+    #Arguments
+    * P, dictionary containg key :t_s extracted from .tdms file
+    #Returns
+    * :t_s : overwritten value of converted time, s
+"""
 function t_conv!(P)
     P[:t_s] = unix2datetime(datetime2unix(DateTime(1904,1,1,0,0,0)) .+(P[:t_s]))
 end
 
 """
-    M_reduce!(P, exp_info)
-
-    Reduce Murrell data
+    M_reduce!(P, exp_info; stresscorr=true, unloadcorr=true)
+    Reduce Murrell data to calculate stress, strain etc.
     #Arguments
-    * P : dictionary containing raw data from the Murrell, must include indices of hit point and sample information
+    * P : raw data extracted from data file
+    * exp_info : dictionary containing information about test conditions, must include indices of hit point and sample information, as follows
+        exp_info = Dict()
+        exp_info[:I]=[1, 2, 3] # Indices at HP, start of unloading and end of unloading
+        exp_info[:IE]=[1, 2, 3, 4] # Indices to estimate moduli
+        exp_info[:P_exp] = 200 # Pressure of experiment
+        exp_info[:T] = 200 # Temperature of experiment
+        exp_info[:εr] = 1e-5 # Strain rate of test
+        exp_info[:K_mm_kN] = K_D2 # Machine compliance [mm kN^-1]
+        exp_info[:L_mm] = 22.00 # Sample length
+        exp_info[:d_mm] = 10.00 # Diameter of sample [m]
     * exp_info : dictionary containing experimental parameters
+    * stresscorr : correct computed differential stress assuming constant volume deformation
+    * unloadcorr : routine to estimate stress on sample during decompression as a result of seal friction
+    returns P : dictionary:
+        * :σ3_MPa : confining pressure, MPa
+        * :t_s_c : time relative to start of experiment, s
+        * :U_mm_c : LVDT recorded displacement, averaged between LVDT1 and LVDT2
+        * :U_mm_fc : displacement corrected for load and (optionally) confining pressure
+        * :F_kN_c : force relative to hitpoint, kN
+        * :ε : natural strain, -
+        * :σ_MPa_j : differential stress corrected for jacket strength, MPa
 """
 
-function M_reduce!(P,exp_info; stresscorr=true, unloadcorr=true)
+function M_reduce!(P, exp_info; stresscorr=true, unloadcorr=true)
     dt = P[:t_s][2].-P[:t_s][1]
     sf = Int(ceil(1/dt))
     I1 = exp_info[:I][1]
@@ -123,15 +148,14 @@ end
 
 
 """
-    SFP_read()
+    SFP_read(fid)
 
     Read and return data from program SFP_furnace_control_V2.vi
 
     #Arguments
-    - 'SFP' : empty dictionary to store extracted data
-    - 'fil::string' : path to file
+    - 'fid::string' : path to file
 """
-function SFP_read(fid)
+function SFP_read(fid::string)
     dat = readdlm(fid)
     headers = dat[:,1]
     I = findall(x->x==headers[1],dat[:,1])
