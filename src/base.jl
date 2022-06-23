@@ -40,17 +40,17 @@ function M_read(fid::String)
     end
     return P
 end
-"""
-function t_conv!(P)
-    convert LabView timestamp to Unix timestamp
-    #Arguments
-    * P, dictionary containg key :t_s extracted from .tdms file
-    #Returns
-    * :t_s : overwritten value of converted time, s
-"""
-function t_conv!(P)
-    P[:t_s] = unix2datetime(datetime2unix(DateTime(1904,1,1,0,0,0)) .+(P[:t_s]))
-end
+# """
+# function t_conv!(P)
+#     convert LabView timestamp to Unix timestamp
+#     #Arguments
+#     * P, dictionary containg key :t_s extracted from .tdms file
+#     #Returns
+#     * :t_s : overwritten value of converted time, s
+# """
+# function t_conv!(P)
+#     P[:t_s] = unix2datetime(datetime2unix(DateTime(1904,1,1,0,0,0)) .+(P[:t_s]))
+# end
 
 """
     M_reduce!(P, exp_info; stresscorr=true, unloadcorr=true)
