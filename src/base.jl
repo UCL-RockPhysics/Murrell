@@ -155,7 +155,7 @@ end
     #Arguments
     - 'fid::string' : path to file
 """
-function SFP_read(fid::string)
+function SFP_read(fid::String)
     dat = readdlm(fid)
     headers = dat[:,1]
     I = findall(x->x==headers[1],dat[:,1])
