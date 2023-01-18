@@ -15,14 +15,14 @@
 function M_read(fid::String)
     tdmsIN = readtdms(fid)
     P = Dict()
-    if tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.7120499126540936e9 # This is here since the LabView software was updated and some of the variable names changed
+    if tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.7120499126540936e9
         P[:t_s] = tdmsIN.groups["Numeric"]["TimeStamp"].data
         P[:F_kN] = tdmsIN.groups["Numeric"]["Load"].data
         P[:Ua_mm] = tdmsIN.groups["Numeric"]["Displacement"].data
         P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT 1"].data
         P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT 2"].data
         P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC 1400 MPa"].data
-    else
+    elseif tdmsIN.groups["Numeric"]["TimeStamp"].data[1] >= 3.7120499126540936e9 & tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.756725042945276e9# This is here since the LabView software was updated and some of the variable names changed
         A = zeros(6,length(tdmsIN.groups["Numeric"]["TimeStamp"].data))
         A[1,:] = tdmsIN.groups["Numeric"]["TimeStamp"].data
         A[2,:] = tdmsIN.groups["Numeric"]["Load"].data
@@ -37,6 +37,23 @@ function M_read(fid::String)
         P[:U1_mm] = A[4,:]
         P[:U2_mm] = A[5,:]
         P[:Pc2_MPa] = A[6,:]
+    else
+        A = zeros(6,length(tdmsIN.groups["Numeric"]["TimeStamp"].data))
+        A[1,:] = tdmsIN.groups["Numeric"]["TimeStamp"].data
+        A[2,:] = tdmsIN.groups["Numeric"]["Load"].data
+        A[3,:] = tdmsIN.groups["Numeric"]["Displacement"].data
+        A[4,:] = tdmsIN.groups["Numeric"]["LVDT1"].data
+        A[5,:] = tdmsIN.groups["Numeric"]["LVDT2"].data
+        A[6,:] = tdmsIN.groups["Numeric"]["PC1400"].data
+        A[7,:] = tdmsIN.groups["Numeric"]["Internal Load"]
+        A = unique(A, dims=2) # There is an occassional bug where data is written to the file twice
+        P[:t_s] = A[1,:]
+        P[:F_kN] = A[2,:]
+        P[:Ua_mm] = A[3,:]
+        P[:U1_mm] = A[4,:]
+        P[:U2_mm] = A[5,:]
+        P[:Pc2_MPa] = A[6,:]
+        P[:ILC_V] = A[7,:]
     end
     return P
 end
