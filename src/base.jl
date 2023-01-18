@@ -38,7 +38,7 @@ function M_read(fid::String)
         P[:U2_mm] = A[5,:]
         P[:Pc2_MPa] = A[6,:]
     else
-        A = zeros(6,length(tdmsIN.groups["Numeric"]["TimeStamp"].data))
+        A = zeros(7,length(tdmsIN.groups["Numeric"]["TimeStamp"].data))
         A[1,:] = tdmsIN.groups["Numeric"]["TimeStamp"].data
         A[2,:] = tdmsIN.groups["Numeric"]["Load"].data
         A[3,:] = tdmsIN.groups["Numeric"]["Displacement"].data
