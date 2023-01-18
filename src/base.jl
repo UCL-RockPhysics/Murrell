@@ -22,7 +22,7 @@ function M_read(fid::String)
         P[:U1_mm] = tdmsIN.groups["Numeric"]["LVDT 1"].data
         P[:U2_mm] = tdmsIN.groups["Numeric"]["LVDT 2"].data
         P[:Pc2_MPa] = tdmsIN.groups["Numeric"]["PC 1400 MPa"].data
-    elseif tdmsIN.groups["Numeric"]["TimeStamp"].data[1] >= 3.7120499126540936e9 & tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.756725042945276e9# This is here since the LabView software was updated and some of the variable names changed
+    elseif tdmsIN.groups["Numeric"]["TimeStamp"].data[1] >= 3.7120499126540936e9 && tdmsIN.groups["Numeric"]["TimeStamp"].data[1] < 3.756725042945276e9# This is here since the LabView software was updated and some of the variable names changed
         A = zeros(6,length(tdmsIN.groups["Numeric"]["TimeStamp"].data))
         A[1,:] = tdmsIN.groups["Numeric"]["TimeStamp"].data
         A[2,:] = tdmsIN.groups["Numeric"]["Load"].data
