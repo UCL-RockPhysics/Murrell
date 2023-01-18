@@ -45,7 +45,7 @@ function M_read(fid::String)
         A[4,:] = tdmsIN.groups["Numeric"]["LVDT1"].data
         A[5,:] = tdmsIN.groups["Numeric"]["LVDT2"].data
         A[6,:] = tdmsIN.groups["Numeric"]["PC1400"].data
-        A[7,:] = tdmsIN.groups["Numeric"]["Internal Load"]
+        A[7,:] = tdmsIN.groups["Numeric"]["Internal Load"].data
         A = unique(A, dims=2) # There is an occassional bug where data is written to the file twice
         P[:t_s] = A[1,:]
         P[:F_kN] = A[2,:]
